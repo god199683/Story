@@ -16,7 +16,7 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
     shown=index;
     document.querySelector('#continue-content').innerHTML=item.contentHtml;
     document.querySelector('#continue-result-label').textContent=item.chapter?'EPISODE '+item.chapter:'PROLOGUE';
-    input.value=item.contentText;count();
+    input.value=(history[Math.max(0,index-1)]||item).contentText;count();
     empty.hidden=true;result.hidden=false;action.hidden=false;button.hidden=true;
     previous.textContent=index>0?'\u2190 \uc774\uc804: \uc81c '+history[index-1].chapter+'\ud654 \ubcf4\uae30':'\u2190 \ud504\ub864\ub85c\uadf8 \uae30\ud68d\uc73c\ub85c';
     next.textContent=index<history.length-1?'\ub2e4\uc74c: \uc81c '+history[index+1].chapter+'\ud654 \ubcf4\uae30 \u2192':'\ub2e4\uc74c: \uc81c '+((item.chapter||0)+1)+'\ud654 \ub9cc\ub4e4\uae30 \u2192';
