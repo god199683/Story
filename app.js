@@ -26,3 +26,14 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
   const accept=$('#accept-plan');if(accept){const create=accept.onclick;accept.onclick=()=>{create();moveActions()}}
   moveActions();
 })();
+/* Open the current story plan for editing without clearing its values. */
+(()=>{
+  if(new URLSearchParams(location.search).get('edit')!=='plan')return;
+  let saved;try{saved=JSON.parse(localStorage.getItem('origin-story-session')||'null')}catch{}
+  if(!saved?.data)return;
+  data=saved.data;
+  const fields={title:'title',genre:'genre',tone:'tone',keywords:'keywords',character:'character'};
+  Object.entries(fields).forEach(([key,id])=>{const field=$('#'+id);if(field&&data[key]!=null)field.value=data[key]});
+  $('#plan-form').hidden=false;$('#writing-panel').hidden=true;$('#plan-result').hidden=true;$('#story-result').hidden=true;$('#empty-state').hidden=false;
+  if(typeof setStep==='function')setStep(0);
+})();
