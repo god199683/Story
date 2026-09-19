@@ -137,3 +137,12 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
   const form=$('#plan-form'),submit=form?.onsubmit;if(form&&submit){form.onsubmit=e=>{submit(e);const draft=data.title,refined=refineTitle(draft,data);if(refined&&refined!==draft){data={...data,title:refined,draftTitle:draft};$('#title').value=refined;$('#plan-content').innerHTML=blueprint(data)}}}
   const source=blueprint;blueprint=d=>{const html=source(d);if(!d.draftTitle)return html;const safe=String(d.draftTitle).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));return html.replace('</div><h3>반영한 이야기 설정</h3>','</div><p class="draft-title">입력한 가제: '+safe+'</p><h3>반영한 이야기 설정</h3>')};
 })();
+/* Enrich prologues with dialogue, inner thought, and a brief second viewpoint. */
+(()=>{
+  const source=prose;
+  prose=(data,previous)=>{
+    const cast=suggestedCast(data),hero=cast[0].name,other=cast[1].name;
+    const scene='“이상해. 분명 어제와는 달라졌어.” '+hero+'의 목소리는 낮았지만 흔들리지 않았다.<br><br><em>(이제 와서 모른 척할 수는 없어.)</em><br><br>한편, '+other+'의 시선에서는 같은 장면이 전혀 다르게 보였다. '+other+'은 말하지 못한 사실을 삼킨 채, '+hero+'이 내릴 다음 선택을 지켜보았다.<br><br>';
+    return source(data,previous).replace('<p>','<p>'+scene);
+  };
+})();
