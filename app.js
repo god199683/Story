@@ -62,3 +62,22 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
   const accept=$('#accept-plan');if(accept){const create=accept.onclick;accept.onclick=()=>{create();sync()}}
   new MutationObserver(sync).observe(result,{attributes:true,attributeFilter:['hidden']});sync();
 })();
+/* Build distinct plans: scene, conflict, resolution, and cast roles all vary together. */
+(()=>{
+  const particle=(word,type)=>{const last=word?.[word.length-1]||'';const code=last.charCodeAt(0)-44032;const final=code>=0&&code<11172&&code%28!==0;return type==='topic'?(final?'은':'는'):type==='subject'?(final?'이':'가'):(final?'을':'를')};
+  blueprint=d=>{
+    const n=seed([d.title,d.genre,d.keywords,d.character,d.variant].join('|'));
+    const keys=(clean(d.keywords)||'낯선 신호, 숨겨진 약속, 변화').split(',').map(v=>v.trim()).filter(Boolean);
+    const [a,b='숨겨진 약속',c='변화']=keys;
+    const cast=suggestedCast(d),hero=cast[0].name;
+    const paths=[
+      {open:hero+particle(hero,'topic')+' '+a+'이 남긴 흔적을 발견하는 순간, 일상이 낯선 방향으로 기울기 시작한다.',middle:b+'을 둘러싼 서로 다른 증언이 드러나며 누구를 믿을지 선택해야 한다.',end:c+'의 대가를 받아들이고 스스로 진실을 공개할지 결정한다.'},
+      {open:a+particle(a,'subject')+' 사라진 날의 기록이 '+hero+' 앞에 도착하면서 이야기가 시작된다.',middle:'가장 가까운 사람의 거짓말이 드러나고, '+hero+particle(hero,'topic')+' 단서를 잃을 위기에 놓인다.',end:'돌이킬 수 없는 선택으로 관계를 지킬지, 숨겨진 사실을 세상에 알릴지 결단한다.'},
+      {open:hero+particle(hero,'topic')+' '+b+'을 지키려다 우연히 '+a+particle(a,'object')+' 마주하고 위험한 거래에 휘말린다.',middle:c+'을 원하는 경쟁자가 먼저 움직이며 주인공의 계획을 뒤집는다.',end:'모두가 피하려 한 장소에서 진짜 목적을 깨닫고, 자신만의 방식으로 문제를 끝낸다.'},
+      {open:'평범해 보이던 행사 한가운데서 '+a+particle(a,'subject')+' 나타나며 '+hero+'의 과거를 흔든다.',middle:'동료와 적의 경계가 무너지면서 '+b+'의 의미가 완전히 달라진다.',end:c+'을 포기하는 대신 더 중요한 사람을 선택하고, 다음 이야기의 문을 연다.'}
+    ];
+    const path=paths[Math.abs(n)%paths.length];
+    const roleSets=[['주인공','기록의 해석자','목적이 다른 동행자','비밀의 증인'],['주인공','뜻밖의 협력자','진실을 감춘 경쟁자','사건의 열쇠'],['주인공','먼저 위험을 감지한 인물','거래를 제안한 인물','과거를 아는 인물'],['주인공','계획을 흔드는 조력자','반대편의 안내자','마지막 선택의 증인']][Math.abs(n)%4];
+    return '<h2>'+d.title+'</h2><div class="meta">'+d.genre+'</div><h3>핵심 질문</h3><p>“'+a+particle(a,'object')+' 마주한 '+hero+particle(hero,'topic')+' 무엇을 지켜야 하는가?”</p><h3>기획의 첫 장면</h3><p>'+path.open+'</p><h3>등장인물 구성</h3><div class="cast-grid">'+cast.map((x,i)=>'<article class="cast-card"><strong>'+x.name+'</strong><span>'+roleSets[i]+'</span><p>'+x.desc+'</p></article>').join('')+'</div><h3>전개 흐름</h3><ol class="plan-beats"><li><b>시작</b>'+path.open+'</li><li><b>전환</b>'+path.middle+'</li><li><b>결말</b>'+path.end+'</li></ol><h3>이야기의 결</h3><p>'+pick(['긴장감 있는 미스터리와 인물 간 신뢰의 변화가 중심이 되는 이야기','선택의 대가와 관계의 균열을 따라가는 감정 중심 드라마','비밀을 추적하는 과정에서 세계관이 넓어지는 모험 서사','서로 다른 욕망이 충돌하며 예상을 뒤집는 스릴러'],n)+'</p>';
+  };
+})();
