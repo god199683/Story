@@ -57,3 +57,19 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
 })();
 /* Result-side access to the immediately previous stage. */
 (()=>{const button=$('#continue-previous'),previous=$('#previous-stage');if(button&&previous)button.onclick=()=>previous.click()})();
+/* Optional total episode count and a manual final-episode action. */
+(()=>{
+  const cap=(text,max)=>{let out='',count=0;for(const ch of text){if(!/\s/.test(ch)){if(count>=max)break;count++}out+=ch}return out.trim()};
+  const source=makeEpisode;
+  makeEpisode=(data,number)=>{
+    const finalEpisode=Boolean(window.__storyFinishRequested)||(Number(data.totalEpisodes)||0)>0&&number>=Number(data.totalEpisodes);
+    const made=source(data,number);
+    if(finalEpisode){const ending='\n\n마침내 모든 선택의 이유가 제자리를 찾았다. 남겨진 사람들은 서로를 바라보며, 이 이야기가 여기서 온전히 끝났음을 받아들였다.';made.body=cap(made.body,20050-nonSpace(ending))+ending;made.html=made.html.replace(/<p>[\s\S]*<\/p>/,'<p>'+made.body.replace(/\n/g,'<br>')+'</p>').replace('</div><p>',' · 완결</div><p>')}
+    return made;
+  };
+  const finish=$('#continue-finish'),next=$('#continue-next'),label=$('#continue-result-label'),result=$('#continue-result');
+  if(!finish||!next||!label||!result)return;
+  finish.onclick=()=>{window.__storyFinishRequested=true;$('#next-episode').click();window.__storyFinishRequested=false};
+  const sync=()=>{const chapter=Number((label.textContent.match(/\d+/)||[])[0]||0),total=Number(session?.data?.totalEpisodes)||0,visible=!result.hidden;if(!visible){finish.hidden=true;return}if(total){finish.hidden=true;if(chapter>=total){next.hidden=true}else{next.hidden=false}}else{finish.hidden=false;next.hidden=false}};
+  new MutationObserver(sync).observe(result,{attributes:true,childList:true,subtree:true});sync();
+})();
