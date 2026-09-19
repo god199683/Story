@@ -122,3 +122,18 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
   };
   const source=prose;prose=(data,previous)=>source({...data,keywords:safeKeywords(data)},previous);
 })();
+/* Treat the entered title as a working title and refine it for the plan. */
+(()=>{
+  const refineTitle=(draft,data)=>{
+    const title=String(draft||'').trim();if(!title||title.includes(' — '))return title;
+    const genre=String(data.genre||''),n=seed([title,genre,data.keywords,data.variant].join('|'));
+    const tags=genre.includes('스릴러')||genre.includes('미스터리')?['사라진 기록','감춰진 진실','마지막 목격자','닫힌 문 너머']:
+      genre.includes('로맨스')?['마지막 편지','우리의 약속','비가 그친 뒤','서로를 향한 길']:
+      genre.includes('SF')?['잃어버린 좌표','기억의 경계','새벽의 신호','다른 세계의 문']:
+      genre.includes('판타지')||genre.includes('애니')?['봉인된 약속','별이 지는 밤','잊힌 왕국','달빛의 기록']:
+      ['숨겨진 약속','사라진 계절','마지막 선택','낯선 내일'];
+    return title+' — '+tags[Math.abs(n)%tags.length];
+  };
+  const form=$('#plan-form'),submit=form?.onsubmit;if(form&&submit){form.onsubmit=e=>{submit(e);const draft=data.title,refined=refineTitle(draft,data);if(refined&&refined!==draft){data={...data,title:refined,draftTitle:draft};$('#title').value=refined;$('#plan-content').innerHTML=blueprint(data)}}}
+  const source=blueprint;blueprint=d=>{const html=source(d);if(!d.draftTitle)return html;const safe=String(d.draftTitle).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));return html.replace('</div><h3>반영한 이야기 설정</h3>','</div><p class="draft-title">입력한 가제: '+safe+'</p><h3>반영한 이야기 설정</h3>')};
+})();
