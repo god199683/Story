@@ -81,3 +81,13 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
     return '<h2>'+d.title+'</h2><div class="meta">'+d.genre+'</div><h3>핵심 질문</h3><p>“'+a+particle(a,'object')+' 마주한 '+hero+particle(hero,'topic')+' 무엇을 지켜야 하는가?”</p><h3>기획의 첫 장면</h3><p>'+path.open+'</p><h3>등장인물 구성</h3><div class="cast-grid">'+cast.map((x,i)=>'<article class="cast-card"><strong>'+x.name+'</strong><span>'+roleSets[i]+'</span><p>'+x.desc+'</p></article>').join('')+'</div><h3>전개 흐름</h3><ol class="plan-beats"><li><b>시작</b>'+path.open+'</li><li><b>전환</b>'+path.middle+'</li><li><b>결말</b>'+path.end+'</li></ol><h3>이야기의 결</h3><p>'+pick(['긴장감 있는 미스터리와 인물 간 신뢰의 변화가 중심이 되는 이야기','선택의 대가와 관계의 균열을 따라가는 감정 중심 드라마','비밀을 추적하는 과정에서 세계관이 넓어지는 모험 서사','서로 다른 욕망이 충돌하며 예상을 뒤집는 스릴러'],n)+'</p>';
   };
 })();
+/* Keep the generated blueprint visible when returning from a prologue. */
+(()=>{
+  if(new URLSearchParams(location.search).get('edit')!=='plan')return;
+  setTimeout(()=>{
+    if(!data?.title)return;
+    $('#plan-content').innerHTML=blueprint(data);
+    $('#plan-form').hidden=false;$('#writing-panel').hidden=true;$('#story-result').hidden=true;$('#empty-state').hidden=true;$('#plan-result').hidden=false;$('#plan-result').scrollTop=0;
+    if(typeof setStep==='function')setStep(0);
+  },0);
+})();
