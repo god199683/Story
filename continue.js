@@ -55,3 +55,5 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
     return source(cut,max-nonSpace(ending)).trim()+ending;
   };
 })();
+/* Result-side access to the immediately previous stage. */
+(()=>{const button=$('#continue-previous'),previous=$('#previous-stage');if(button&&previous)button.onclick=()=>previous.click()})();
