@@ -37,3 +37,9 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
   previous.onclick=()=>{if(shown>0)show(shown-1);else location.href='index.html?view=prologue'};
   if(session.history?.length&&session.chapter>0)show(history.length-1);
 })();
+/* apply particle correction to long episode text */
+(()=>{
+  const batchim=ch=>{const code=ch.charCodeAt(0)-44032;return code>=0&&code<11172&&code%28!==0};
+  const naturalize=text=>String(text).replace(/([가-힣])은\(는\)/g,(_,ch)=>ch+(batchim(ch)?'은':'는')).replace(/([가-힣])이\(가\)/g,(_,ch)=>ch+(batchim(ch)?'이':'가')).replace(/([가-힣])을\(를\)/g,(_,ch)=>ch+(batchim(ch)?'을':'를'));
+  const source=makeEpisode;makeEpisode=(...args)=>{const made=source(...args);made.body=naturalize(made.body);made.html=naturalize(made.html);return made};
+})();

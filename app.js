@@ -16,3 +16,13 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
   accept.onclick=()=>{createPrologue();writer.hidden=true};
   if(back){const backToPlan=back.onclick;back.onclick=()=>{if(backToPlan)backToPlan();writer.hidden=false}};
 })();
+/* natural Korean particles and result actions outside the story scroll */
+(()=>{
+  const batchim=ch=>{const code=ch.charCodeAt(0)-44032;return code>=0&&code<11172&&code%28!==0};
+  const naturalize=text=>String(text).replace(/([가-힣])은\(는\)/g,(_,ch)=>ch+(batchim(ch)?'은':'는')).replace(/([가-힣])이\(가\)/g,(_,ch)=>ch+(batchim(ch)?'이':'가')).replace(/([가-힣])을\(를\)/g,(_,ch)=>ch+(batchim(ch)?'을':'를')).replace(/([가-힣])과\(와\)/g,(_,ch)=>ch+(batchim(ch)?'과':'와'));
+  if(typeof prose==='function'){const source=prose;prose=(...args)=>naturalize(source(...args))}
+  if(typeof makeEpisode==='function'){const source=makeEpisode;makeEpisode=(...args)=>{const made=source(...args);made.body=naturalize(made.body);made.html=naturalize(made.html);return made}}
+  const moveActions=()=>{const result=$('#story-result');if(!result||result.hidden)return;const output=result.parentElement;let next=$('#prologue-next');if(!next){next=document.createElement('a');next.id='prologue-next';next.className='prologue-next';next.href='continue.html';next.textContent='\ub2e4\uc74c: \uc81c 1\ud654 \ub9cc\ub4e4\uae30 \u2192'}if(next.parentElement!==output)output.append(next);const back=$('#back-to-plan');if(back&&back.parentElement!==output)output.append(back)};
+  const accept=$('#accept-plan');if(accept){const create=accept.onclick;accept.onclick=()=>{create();moveActions()}}
+  moveActions();
+})();
