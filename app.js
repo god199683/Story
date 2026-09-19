@@ -52,3 +52,13 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
     return source(d).replace('<h3>핵심 질문</h3>','<h3>기획의 첫 장면</h3><p>'+openings[Math.abs(n)%openings.length]+'</p><h3>핵심 질문</h3>');
   };
 })();
+/* Always expose the route from a prologue back to its plan. */
+(()=>{
+  const result=$('#story-result');if(!result)return;
+  const output=result.parentElement;
+  let plan=$('#prologue-plan-edit');
+  if(!plan){plan=document.createElement('a');plan.id='prologue-plan-edit';plan.className='prologue-plan-edit';plan.href='index.html?edit=plan';plan.textContent='\u2190 \uae30\ud68d\uc73c\ub85c \ub3cc\uc544\uac00\uae30';output.append(plan)}
+  const sync=()=>{plan.hidden=result.hidden};
+  const accept=$('#accept-plan');if(accept){const create=accept.onclick;accept.onclick=()=>{create();sync()}}
+  new MutationObserver(sync).observe(result,{attributes:true,attributeFilter:['hidden']});sync();
+})();
