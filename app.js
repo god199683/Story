@@ -99,14 +99,26 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
     const setting=clean(d.keywords)||'사용자가 정한 세계와 사건';
     const pieces=setting.split(/[,\n]/).map(v=>v.trim()).filter(Boolean);
     const motif=(pieces.find(v=>v.length<=28)||'핵심 사건').replace(/[.?!]$/,'');
-    const cast=suggestedCast(d),hero=cast[0].name;
+    const cast=suggestedCast(d),hero=cast[0].name;const hasBatchim=word=>{const code=(word||'').slice(-1).charCodeAt(0)-44032;return code>=0&&code<11172&&code%28!==0};const topic=word=>word+(hasBatchim(word)?'은':'는');const object=word=>word+(hasBatchim(word)?'을':'를');
     const flows=[
-      ['익숙한 일상에 작은 균열이 생기고, '+hero+'은 그 원인을 외면하지 못한다.','첫 단서를 따라갈수록 가까운 사람들의 말이 서로 어긋나기 시작한다.','진실을 숨기는 편이 안전하다는 유혹을 뿌리치고, '+hero+'은 스스로 답을 선택한다.'],
-      ['예상하지 못한 사건이 '+hero+'의 일상 한가운데로 들어오며 이야기가 시작된다.','도움을 주던 인물의 목적이 드러나고, '+hero+'은 신뢰와 의심 사이에서 흔들린다.','가장 소중한 것을 지키기 위해, '+hero+'은 한 번도 선택하지 않았던 길을 택한다.'],
-      ['오래 묻혀 있던 비밀이 모습을 드러내자, '+hero+'은 과거의 선택을 다시 마주한다.','같은 목표를 가진 이들이 서로 다른 방법을 고집하면서 갈등은 더 깊어진다.','모든 사실이 드러난 자리에서, '+hero+'은 관계와 진실을 함께 지킬 방법을 찾아낸다.'],
-      ['평범한 하루의 끝에서 발견한 낯선 흔적이 '+hero+'을 새로운 세계로 이끈다.','한 걸음 나아갈 때마다 예상 밖의 대가가 따르고, 동료들 사이의 약속도 시험받는다.','마지막 순간 '+hero+'은 두려움 대신 책임을 선택하며 다음 세계의 문을 연다.']
+      ['익숙한 일상에 작은 균열이 생기고, '+topic(hero)+' 그 원인을 외면하지 못한다.','첫 단서를 따라갈수록 가까운 사람들의 말이 서로 어긋나기 시작한다.','진실을 숨기는 편이 안전하다는 유혹을 뿌리치고, '+topic(hero)+' 스스로 답을 선택한다.'],
+      ['예상하지 못한 사건이 '+hero+'의 일상 한가운데로 들어오며 이야기가 시작된다.','도움을 주던 인물의 목적이 드러나고, '+topic(hero)+' 신뢰와 의심 사이에서 흔들린다.','가장 소중한 것을 지키기 위해, '+topic(hero)+' 한 번도 선택하지 않았던 길을 택한다.'],
+      ['오래 묻혀 있던 비밀이 모습을 드러내자, '+topic(hero)+' 과거의 선택을 다시 마주한다.','같은 목표를 가진 이들이 서로 다른 방법을 고집하면서 갈등은 더 깊어진다.','모든 사실이 드러난 자리에서, '+topic(hero)+' 관계와 진실을 함께 지킬 방법을 찾아낸다.'],
+      ['평범한 하루의 끝에서 발견한 낯선 흔적이 '+object(hero)+' 새로운 세계로 이끈다.','한 걸음 나아갈 때마다 예상 밖의 대가가 따르고, 동료들 사이의 약속도 시험받는다.','마지막 순간 '+topic(hero)+' 두려움 대신 책임을 선택하며 다음 세계의 문을 연다.']
     ][Math.abs(n)%4];
     const roles=[['주인공','이야기의 중심에서 선택을 내리는 인물'],['조력자','주인공이 놓친 단서를 먼저 발견하는 인물'],['경쟁자','같은 목표를 두고 다른 답을 찾는 인물'],['연결고리','과거와 현재를 잇는 비밀을 가진 인물']];
-    return '<h2>'+escapeHtml(d.title)+'</h2><div class="meta">'+escapeHtml(d.genre)+'</div><h3>반영한 이야기 설정</h3><p class="plan-setting">'+escapeHtml(setting).replace(/\n/g,'<br>')+'</p><h3>핵심 소재</h3><p><b>'+escapeHtml(motif)+'</b>을 중심으로, 선택의 대가와 인물 사이의 관계 변화를 따라갑니다.</p><h3>기획의 첫 장면</h3><p>'+flows[0]+'</p><h3>등장인물 구성</h3><div class="cast-grid">'+cast.map((x,i)=>'<article class="cast-card"><strong>'+escapeHtml(x.name)+'</strong><span>'+roles[i][0]+'</span><p>'+roles[i][1]+'<br>'+escapeHtml(x.desc)+'</p></article>').join('')+'</div><h3>전개 흐름</h3><ol class="plan-beats"><li><b>시작</b>'+flows[0]+'</li><li><b>전환</b>'+flows[1]+'</li><li><b>결말</b>'+flows[2]+'</li></ol><h3>이야기의 결</h3><p>'+pick(['인물의 감정과 선택을 차분히 따라가는 드라마','숨겨진 사실을 하나씩 밝혀 가는 미스터리','관계의 변화가 사건을 움직이는 성장 이야기','선택의 대가가 남는 긴장감 있는 서사'],n)+'</p>';
+    return '<h2>'+escapeHtml(d.title)+'</h2><div class="meta">'+escapeHtml(d.genre)+'</div><h3>반영한 이야기 설정</h3><p class="plan-setting">'+escapeHtml(setting).replace(/\n/g,'<br>')+'</p><h3>핵심 소재</h3><p><b>'+escapeHtml(motif)+'</b></p><p>이 기획은 사용자가 정한 설정을 중심으로, 인물의 선택과 관계 변화를 따라갑니다.</p><h3>기획의 첫 장면</h3><p>'+flows[0]+'</p><h3>등장인물 구성</h3><div class="cast-grid">'+cast.map((x,i)=>'<article class="cast-card"><strong>'+escapeHtml(x.name)+'</strong><span>'+roles[i][0]+'</span><p>'+roles[i][1]+'<br>'+escapeHtml(x.desc)+'</p></article>').join('')+'</div><h3>전개 흐름</h3><ol class="plan-beats"><li><b>시작</b>'+flows[0]+'</li><li><b>전환</b>'+flows[1]+'</li><li><b>결말</b>'+flows[2]+'</li></ol><h3>이야기의 결</h3><p>'+pick(['인물의 감정과 선택을 차분히 따라가는 드라마','숨겨진 사실을 하나씩 밝혀 가는 미스터리','관계의 변화가 사건을 움직이는 성장 이야기','선택의 대가가 남는 긴장감 있는 서사'],n)+'</p>';
   };
+})();
+/* Do not append free-form premise text to Korean particles inside prose. */
+(()=>{
+  const safeKeywords=data=>{
+    const genre=String(data.genre||'');
+    if(genre.includes('스릴러')||genre.includes('미스터리'))return '사건의 단서, 숨겨진 진실, 결정적 선택';
+    if(genre.includes('로맨스'))return '뜻밖의 만남, 오래된 약속, 관계의 변화';
+    if(genre.includes('판타지')||genre.includes('애니'))return '낯선 세계의 단서, 봉인된 약속, 새로운 길';
+    if(genre.includes('SF'))return '미지의 기록, 사라진 규칙, 중요한 선택';
+    return '예상 밖의 사건, 숨겨진 약속, 관계의 변화';
+  };
+  const source=prose;prose=(data,previous)=>source({...data,keywords:safeKeywords(data)},previous);
 })();

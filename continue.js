@@ -73,3 +73,15 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
   const sync=()=>{const chapter=Number((label.textContent.match(/\d+/)||[])[0]||0),total=Number(session?.data?.totalEpisodes)||0,visible=!result.hidden;if(!visible){finish.hidden=true;return}if(total){finish.hidden=true;if(chapter>=total){next.hidden=true}else{next.hidden=false}}else{finish.hidden=false;next.hidden=false}};
   new MutationObserver(sync).observe(result,{attributes:true,childList:true,subtree:true});sync();
 })();
+/* Use grammar-safe narrative terms for long free-form story settings. */
+(()=>{
+  const safeKeywords=data=>{
+    const genre=String(data.genre||'');
+    if(genre.includes('스릴러')||genre.includes('미스터리'))return '사건의 단서, 숨겨진 진실';
+    if(genre.includes('로맨스'))return '뜻밖의 만남, 오래된 약속';
+    if(genre.includes('판타지')||genre.includes('애니'))return '낯선 세계의 단서, 봉인된 약속';
+    if(genre.includes('SF'))return '미지의 기록, 사라진 규칙';
+    return '예상 밖의 사건, 숨겨진 약속';
+  };
+  const source=makeEpisode;makeEpisode=(data,number)=>source({...data,keywords:safeKeywords(data)},number);
+})();
