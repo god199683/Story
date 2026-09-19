@@ -92,7 +92,7 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
   const source=makeEpisode;
   makeEpisode=(data,number)=>{
     const made=source(data,number),people=cast(data),hero=people.hero,other=people.other;
-    const insert='\n\n“여기서 멈추면 아무것도 달라지지 않아.” '+hero+'은 조용히 말했다.\n\n(두렵지 않은 척했지만, 마음 한쪽은 이미 오래전부터 흔들리고 있었다.)\n\n한편, '+other+'의 시선에서는 '+hero+'의 결심이 무모해 보였다. '+other+'은 말하지 못한 사실을 떠올리며, 이번에는 반드시 곁을 지키겠다고 마음먹었다.';
+    const insert='\n\n“여기서 멈추면 아무것도 달라지지 않아.” '+hero+'은 조용히 말했다.\n\n\'두렵지 않은 척했지만, 마음 한쪽은 이미 오래전부터 흔들리고 있었다.\'\n\n한편, '+other+'의 시선에서는 '+hero+'의 결심이 무모해 보였다. '+other+'은 말하지 못한 사실을 떠올리며, 이번에는 반드시 곁을 지키겠다고 마음먹었다.';
     made.body=complete(made.body.replace('방금 전까지 이어진 사건의 여운은 아직 가라앉지 않았다.','방금 전까지 이어진 사건의 여운은 아직 가라앉지 않았다.'+insert));
     made.html=made.html.replace(/<p>[\s\S]*<\/p>/,'<p>'+made.body.replace(/\n/g,'<br>')+'</p>');
     return made;

@@ -142,7 +142,7 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
   const source=prose;
   prose=(data,previous)=>{
     const cast=suggestedCast(data),hero=cast[0].name,other=cast[1].name;
-    const scene='“이상해. 분명 어제와는 달라졌어.” '+hero+'의 목소리는 낮았지만 흔들리지 않았다.<br><br><em>(이제 와서 모른 척할 수는 없어.)</em><br><br>한편, '+other+'의 시선에서는 같은 장면이 전혀 다르게 보였다. '+other+'은 말하지 못한 사실을 삼킨 채, '+hero+'이 내릴 다음 선택을 지켜보았다.<br><br>';
+    const scene='“이상해. 분명 어제와는 달라졌어.” '+hero+'의 목소리는 낮았지만 흔들리지 않았다.<br><br><em>&#39;이제 와서 모른 척할 수는 없어.&#39;</em><br><br>한편, '+other+'의 시선에서는 같은 장면이 전혀 다르게 보였다. '+other+'은 말하지 못한 사실을 삼킨 채, '+hero+'이 내릴 다음 선택을 지켜보았다.<br><br>';
     return source(data,previous).replace('<p>','<p>'+scene);
   };
 })();
