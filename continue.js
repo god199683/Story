@@ -98,3 +98,24 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
     return made;
   };
 })();
+/* Let continuation chapters explicitly carry the original user premise forward. */
+(()=>{
+  const source=makeEpisode;
+  const excerptOf=value=>{const text=clean(value).trim();if(!text)return '';return text.length>360?text.slice(0,360)+'…':text};
+  makeEpisode=(data,number)=>{
+    const made=source(data,number),excerpt=excerptOf(data.keywords);if(!excerpt)return made;
+    const passage='\n\n그들이 마주한 사건의 출발점은 여전히 분명했다.\n“'+excerpt+'”\n';
+    made.body=made.body.replace('방금 전까지 이어진 사건의 여운은 아직 가라앉지 않았다.','방금 전까지 이어진 사건의 여운은 아직 가라앉지 않았다.'+passage);
+    made.html=made.html.replace(/<p>[\s\S]*<\/p>/,'<p>'+made.body.replace(/\n/g,'<br>')+'</p>');
+    return made;
+  };
+})();
+/* Keep inserted premise text within the 20,050-character episode limit while preserving the ending. */
+(()=>{
+  const cap=(text,max)=>{let out='',count=0;for(const ch of text){if(!/\s/.test(ch)){if(count>=max)break;count++}out+=ch}return out.trim()};
+  const source=makeEpisode;
+  makeEpisode=(data,number)=>{
+    const made=source(data,number);if(nonSpace(made.body)>20050){let index=0,count=0;for(;index<made.body.length&&count<650;index++){if(!/\s/.test(made.body[index]))count++}const tail=made.body.slice(index);made.body=cap(made.body.slice(0,index),20050-nonSpace(tail))+'\n\n'+tail}
+    made.html=made.html.replace(/<p>[\s\S]*<\/p>/,'<p>'+made.body.replace(/\n/g,'<br>')+'</p>');return made;
+  };
+})();

@@ -146,3 +146,14 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
     return source(data,previous).replace('<p>','<p>'+scene);
   };
 })();
+/* Keep the user premise visible in the prose without attaching particles to it. */
+(()=>{
+  const source=prose;
+  const escape=value=>String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  prose=(data,previous)=>{
+    const setting=clean(data.keywords).trim();if(!setting)return source(data,previous);
+    const excerpt=setting.length>700?setting.slice(0,700)+'…':setting;
+    const premise='그날 이후, 모두가 피할 수 없게 된 현실은 분명했다.<br>“'+escape(excerpt).replace(/\n/g,'<br>')+'”<br><br>';
+    return source(data,previous).replace('<p>','<p>'+premise);
+  };
+})();
