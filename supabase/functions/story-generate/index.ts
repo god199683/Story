@@ -38,8 +38,11 @@ async function openAI(input: string, maxOutputTokens: number, jsonSchema?: objec
   });
   const payload = await response.json();
   if (!response.ok) throw new Error(payload?.error?.message || 'OpenAI 요청에 실패했습니다.');
-  const text = payload.output_text || '';
-  if (!text) throw new Error('AI가 글을 반환하지 않았습니다. 다시 시도해 주세요.');
+  const text = payload.output_text || (payload.output || []).flatMap((item: any) => item.content || []).filter((part: any) => part.type === 'output_text').map((part: any) => part.text || '').join('');
+  if (!text) {
+    const refusal = (payload.output || []).flatMap((item: any) => item.content || []).find((part: any) => part.type === 'refusal')?.refusal;
+    throw new Error(refusal || payload.incomplete_details?.reason || 'AI가 글을 반환하지 않았습니다. 다시 시도해 주세요.');
+  }
   return text;
 }
 
