@@ -11,3 +11,5 @@ const SUPABASE_URL='https://rrvntqfubjfbnkhujrxo.supabase.co';const SUPABASE_KEY
   const start=()=>{sweep(document.body);new MutationObserver(records=>records.forEach(record=>record.addedNodes.forEach(node=>{if(node.nodeType===Node.TEXT_NODE)clean(node);else if(node.nodeType===Node.ELEMENT_NODE)sweep(node)}))).observe(document.body,{childList:true,subtree:true})};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
 })();
+/* The browser calls a Supabase Edge Function. OpenAI credentials remain server-only. */
+window.StoryAI={async generate(payload){await ensureStorySession();const {data,error}=await supabaseClient.functions.invoke('story-generate',{body:payload});if(error)throw error;if(!data?.ok)throw new Error(data?.error||'AI 생성에 실패했습니다.');return data}};
