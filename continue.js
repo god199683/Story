@@ -73,18 +73,6 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
   const sync=()=>{const chapter=Number((label.textContent.match(/\d+/)||[])[0]||0),total=Number(session?.data?.totalEpisodes)||0,visible=!result.hidden;if(!visible){finish.hidden=true;return}if(total){finish.hidden=true;if(chapter>=total){next.hidden=true}else{next.hidden=false}}else{finish.hidden=false;next.hidden=false}};
   new MutationObserver(sync).observe(result,{attributes:true,childList:true,subtree:true});sync();
 })();
-/* Use grammar-safe narrative terms for long free-form story settings. */
-(()=>{
-  const safeKeywords=data=>{
-    const genre=String(data.genre||'');
-    if(genre.includes('스릴러')||genre.includes('미스터리'))return '사건의 단서, 숨겨진 진실';
-    if(genre.includes('로맨스'))return '뜻밖의 만남, 오래된 약속';
-    if(genre.includes('판타지')||genre.includes('애니'))return '낯선 세계의 단서, 봉인된 약속';
-    if(genre.includes('SF'))return '미지의 기록, 사라진 규칙';
-    return '예상 밖의 사건, 숨겨진 약속';
-  };
-  const source=makeEpisode;makeEpisode=(data,number)=>source({...data,keywords:safeKeywords(data)},number);
-})();
 /* Enrich episodes with dialogue, inner thought, and a second character viewpoint. */
 (()=>{
   const cap=(text,max)=>{let out='',count=0;for(const ch of text){if(!/\s/.test(ch)){if(count>=max)break;count++}out+=ch}return out.trim()};
@@ -98,18 +86,6 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
     return made;
   };
 })();
-/* Let continuation chapters explicitly carry the original user premise forward. */
-(()=>{
-  const source=makeEpisode;
-  const excerptOf=value=>{const text=clean(value).trim();if(!text)return '';return text.length>360?text.slice(0,360)+'…':text};
-  makeEpisode=(data,number)=>{
-    const made=source(data,number),excerpt=excerptOf(data.keywords);if(!excerpt)return made;
-    const passage='\n\n그들이 마주한 사건의 출발점은 여전히 분명했다.\n“'+excerpt+'”\n';
-    made.body=made.body.replace('방금 전까지 이어진 사건의 여운은 아직 가라앉지 않았다.','방금 전까지 이어진 사건의 여운은 아직 가라앉지 않았다.'+passage);
-    made.html=made.html.replace(/<p>[\s\S]*<\/p>/,'<p>'+made.body.replace(/\n/g,'<br>')+'</p>');
-    return made;
-  };
-})();
 /* Keep inserted premise text within the 20,050-character episode limit while preserving the ending. */
 (()=>{
   const cap=(text,max)=>{let out='',count=0;for(const ch of text){if(!/\s/.test(ch)){if(count>=max)break;count++}out+=ch}return out.trim()};
@@ -118,4 +94,15 @@ const resultNext=$('#continue-next');if(resultNext){const syncResultNext=()=>{co
     const made=source(data,number);if(nonSpace(made.body)>20050){let index=0,count=0;for(;index<made.body.length&&count<650;index++){if(!/\s/.test(made.body[index]))count++}const tail=made.body.slice(index);made.body=cap(made.body.slice(0,index),20050-nonSpace(tail))+'\n\n'+tail}
     made.html=made.html.replace(/<p>[\s\S]*<\/p>/,'<p>'+made.body.replace(/\n/g,'<br>')+'</p>');return made;
   };
+})();
+
+/* Distill the setting into recurring motifs instead of quoting it verbatim. */
+(()=>{
+  const termsFrom=data=>{
+    const stop=new Set(['그리고','그러나','하지만','그것','이것','사람','이야기','설정','주인공','때문','모든','하나','그런','이런','있는','없는','합니다','했다']);
+    const raw=clean(data.keywords).replace(/[^가-힣A-Za-z0-9\s]/g,' ').split(/\s+/).map(word=>word.replace(/(이었|였|었|았)?(습니다|한다|했다|하며|해서|하고|되는|했던|으로|에게|에서|에는|은|는|이|가|을|를|와|과|의|도|만|에|고|다)$/,'')).filter(word=>word.length>0&&!stop.has(word));
+    const fallback=String(data.genre||'').includes('스릴러')?'사건의 단서, 숨겨진 진실':String(data.genre||'').includes('로맨스')?'뜻밖의 만남, 오래된 약속':String(data.genre||'').includes('판타지')||String(data.genre||'').includes('애니')?'낯선 세계, 봉인된 힘':'예상 밖의 사건, 숨겨진 약속';
+    const picked=[...new Set(raw)].slice(0,2);return picked.length?picked.concat(['결정적 선택']).slice(0,2).join(', '):fallback;
+  };
+  const source=makeEpisode;makeEpisode=(data,number)=>source({...data,keywords:termsFrom(data)},number);
 })();

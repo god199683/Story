@@ -110,18 +110,6 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
     return '<h2>'+escapeHtml(d.title)+'</h2><div class="meta">'+escapeHtml(d.genre)+'</div><h3>반영한 이야기 설정</h3><p class="plan-setting">'+escapeHtml(setting).replace(/\n/g,'<br>')+'</p><h3>핵심 소재</h3><p><b>'+escapeHtml(motif)+'</b></p><p>이 기획은 사용자가 정한 설정을 중심으로, 인물의 선택과 관계 변화를 따라갑니다.</p><h3>기획의 첫 장면</h3><p>'+flows[0]+'</p><h3>등장인물 구성</h3><div class="cast-grid">'+cast.map((x,i)=>'<article class="cast-card"><strong>'+escapeHtml(x.name)+'</strong><span>'+roles[i][0]+'</span><p>'+roles[i][1]+'<br>'+escapeHtml(x.desc)+'</p></article>').join('')+'</div><h3>전개 흐름</h3><ol class="plan-beats"><li><b>시작</b>'+flows[0]+'</li><li><b>전환</b>'+flows[1]+'</li><li><b>결말</b>'+flows[2]+'</li></ol><h3>이야기의 결</h3><p>'+pick(['인물의 감정과 선택을 차분히 따라가는 드라마','숨겨진 사실을 하나씩 밝혀 가는 미스터리','관계의 변화가 사건을 움직이는 성장 이야기','선택의 대가가 남는 긴장감 있는 서사'],n)+'</p>';
   };
 })();
-/* Do not append free-form premise text to Korean particles inside prose. */
-(()=>{
-  const safeKeywords=data=>{
-    const genre=String(data.genre||'');
-    if(genre.includes('스릴러')||genre.includes('미스터리'))return '사건의 단서, 숨겨진 진실, 결정적 선택';
-    if(genre.includes('로맨스'))return '뜻밖의 만남, 오래된 약속, 관계의 변화';
-    if(genre.includes('판타지')||genre.includes('애니'))return '낯선 세계의 단서, 봉인된 약속, 새로운 길';
-    if(genre.includes('SF'))return '미지의 기록, 사라진 규칙, 중요한 선택';
-    return '예상 밖의 사건, 숨겨진 약속, 관계의 변화';
-  };
-  const source=prose;prose=(data,previous)=>source({...data,keywords:safeKeywords(data)},previous);
-})();
 /* Treat the entered title as a working title and refine it for the plan. */
 (()=>{
   const refineTitle=(draft,data)=>{
@@ -146,14 +134,15 @@ const latestPrologueHandler=$('#accept-plan').onclick;$('#accept-plan').onclick=
     return source(data,previous).replace('<p>','<p>'+scene);
   };
 })();
-/* Keep the user premise visible in the prose without attaching particles to it. */
+
+
+/* Distill free-form settings into story motifs, then weave them into the prose. */
 (()=>{
-  const source=prose;
-  const escape=value=>String(value||'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-  prose=(data,previous)=>{
-    const setting=clean(data.keywords).trim();if(!setting)return source(data,previous);
-    const excerpt=setting.length>700?setting.slice(0,700)+'…':setting;
-    const premise='그날 이후, 모두가 피할 수 없게 된 현실은 분명했다.<br>“'+escape(excerpt).replace(/\n/g,'<br>')+'”<br><br>';
-    return source(data,previous).replace('<p>','<p>'+premise);
+  const termsFrom=data=>{
+    const stop=new Set(['그리고','그러나','하지만','그것','이것','사람','이야기','설정','주인공','때문','모든','하나','그런','이런','있는','없는','합니다','했다']);
+    const raw=clean(data.keywords).replace(/[^가-힣A-Za-z0-9\s]/g,' ').split(/\s+/).map(word=>word.replace(/(이었|였|었|았)?(습니다|한다|했다|하며|해서|하고|되는|했던|으로|에게|에서|에는|에는|은|는|이|가|을|를|와|과|의|도|만|에|고|다)$/,'')).filter(word=>word.length>0&&!stop.has(word));
+    const fallback=String(data.genre||'').includes('스릴러')?'사건의 단서, 숨겨진 진실, 위험한 선택':String(data.genre||'').includes('로맨스')?'뜻밖의 만남, 오래된 약속, 관계의 변화':String(data.genre||'').includes('판타지')||String(data.genre||'').includes('애니')?'낯선 세계, 봉인된 힘, 오래된 약속':'예상 밖의 사건, 숨겨진 약속, 관계의 변화';
+    const picked=[...new Set(raw)].slice(0,3);return picked.length?picked.concat(['숨겨진 약속','결정적 선택']).slice(0,3).join(', '):fallback;
   };
+  const source=prose;prose=(data,previous)=>source({...data,keywords:termsFrom(data)},previous);
 })();
