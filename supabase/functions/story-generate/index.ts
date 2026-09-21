@@ -108,9 +108,6 @@ Deno.serve(async (req) => {
     } else {
       const prompt = episodePrompt(request.story || {}, mode, request.previous || '', request.plan, Number(request.episode || 0), Boolean(request.finish));
       let text = stripMarkup(await openAI(prompt, mode === 'prologue' ? 5000 : 22000));
-      if (mode === 'episode' && withoutSpace(text) < 20000) {
-        text = stripMarkup(await openAI(prompt + '\n\n중요: 직전 시도는 분량이 부족했습니다. 이번에는 공백 제외 20,000~20,050자를 반드시 채우고, 자연스러운 완결 문장으로 마치세요.', 22000));
-      }
       if (mode === 'episode' && withoutSpace(text) > 20050) {
         let count = 0, cut = 0;
         for (const char of text) { if (!/\s/.test(char)) count++; if (count > 20050) break; cut++; }
