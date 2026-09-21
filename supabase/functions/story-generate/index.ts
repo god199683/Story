@@ -27,7 +27,7 @@ async function openAI(input: string, maxOutputTokens: number, jsonSchema?: objec
     model: 'gpt-5.6-terra',
     input,
     max_output_tokens: maxOutputTokens,
-    reasoning: { effort: 'low' },
+    reasoning: { effort: 'none' },
     store: false,
   };
   if (jsonSchema) body.text = { format: { type: 'json_schema', name: 'story_plan', strict: true, schema: jsonSchema } };
@@ -71,7 +71,7 @@ const planSchema = {
 function episodePrompt(story: Record<string, unknown>, mode: string, previous: string, plan: unknown, episode: number, finish: boolean) {
   const kind = mode === 'prologue' ? '프롤로그' : `제 ${episode}화`;
   const length = mode === 'prologue' ? '1,500~3,000자' : '공백을 제외하고 반드시 20,000자 이상 20,050자 이하';
-  return `당신은 한국어 장편소설 작가입니다. 아래 기획과 직전 원고를 바탕으로 ${kind}를 씁니다. 기존 작품·작가·실존 인물·프랜차이즈의 표현, 줄거리, 고유 설정을 모방하지 마세요. 설정을 설명문으로 복사하거나 '지난 이야기에서'라고 요약하지 말고, 행동·장면·대화·갈등 속에 녹이세요. 자연스러운 한국어 문법을 지키고, 은(는)·이(가) 같은 괄호형 조사를 절대 쓰지 마세요. 대사는 큰따옴표, 마음속 말은 작은따옴표로 쓰세요. 한 인물의 시점에만 고정하지 말고 필요할 때 다른 인물의 관찰을 짧게 섞으세요. 출력은 제목·화수·목록·해설·마크다운 없이 본문만 써야 합니다. 마지막은 반드시 완결된 문장으로 끝나야 합니다.
+  return `당신은 한국어 장편소설 작가입니다. 아래 기획과 직전 원고를 바탕으로 ${kind}를 씁니다. 기존 작품·작가·실존 인물·프랜차이즈의 표현, 줄거리, 고유 설정을 모방하지 마세요. 설정을 설명문으로 복사하거나 '지난 이야기에서'라고 요약하지 말고, 행동·장면·대화·갈등 속에 녹이세요. 자연스러운 한국어 문법을 지키고, 은(는)·이(가) 같은 괄호형 조사를 절대 쓰지 마세요. 대사는 큰따옴표, 마음속 말은 작은따옴표로 쓰세요. 한 인물의 시점에만 고정하지 말고 필요할 때 다른 인물의 관찰을 짧게 섞으세요. 출력은 제목·화수·목록·해설·마크다운 없이 본문만 써야 합니다. 마지막은 반드시 완결된 문장으로 끝나야 합니다. 제1화 이후에는 공백 제외 20,025자 전후를 목표로 하며, 20,000자보다 짧게 끝내면 안 됩니다.
 
 분량: ${length}
 가제 및 작품명: ${story.title || ''}
@@ -106,7 +106,18 @@ Deno.serve(async (req) => {
       const text = await openAI(planPrompt(request.story || {}), 2400, planSchema);
       result = JSON.parse(stripMarkup(text));
     } else {
-      const text = stripMarkup(await openAI(episodePrompt(request.story || {}, mode, request.previous || '', request.plan, Number(request.episode || 0), Boolean(request.finish)), mode === 'prologue' ? 5000 : 16000));
+      const prompt = episodePrompt(request.story || {}, mode, request.previous || '', request.plan, Number(request.episode || 0), Boolean(request.finish));
+      let text = stripMarkup(await openAI(prompt, mode === 'prologue' ? 5000 : 22000));
+      if (mode === 'episode' && withoutSpace(text) < 20000) {
+        text = stripMarkup(await openAI(prompt + '\n\n중요: 직전 시도는 분량이 부족했습니다. 이번에는 공백 제외 20,000~20,050자를 반드시 채우고, 자연스러운 완결 문장으로 마치세요.', 22000));
+      }
+      if (mode === 'episode' && withoutSpace(text) > 20050) {
+        let count = 0, cut = 0;
+        for (const char of text) { if (!/\s/.test(char)) count++; if (count > 20050) break; cut++; }
+        const clipped = text.slice(0, cut);
+        const end = Math.max(clipped.lastIndexOf('.'), clipped.lastIndexOf('!'), clipped.lastIndexOf('?'));
+        text = (end >= 0 && withoutSpace(clipped.slice(0, end + 1)) >= 20000 ? clipped.slice(0, end + 1) : clipped).trim();
+      }
       if (mode === 'episode' && (withoutSpace(text) < 20000 || withoutSpace(text) > 20050)) throw new Error('정확한 분량의 원고를 만들지 못했습니다. 다시 생성해 주세요.');
       result = { text };
     }
