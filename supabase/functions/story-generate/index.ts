@@ -97,17 +97,23 @@ Deno.serve(async (req) => {
     const usageUrl = `${url}/rest/v1/ai_generation_requests?user_id=eq.${user.id}&created_at=gte.${encodeURIComponent(windowStart)}&select=id`;
     const usage = await fetch(usageUrl, { headers: { apikey: service, Authorization: `Bearer ${service}` } });
     if (!usage.ok) throw new Error('AI 요청 제한 테이블을 준비해야 합니다. supabase-setup.sql을 다시 실행해 주세요.');
-    if ((await usage.json()).length >= 8) return json({ ok: false, error: '안전을 위해 시간당 AI 생성은 8회로 제한됩니다. 잠시 후 다시 시도해 주세요.' }, 429);
+    if ((await usage.json()).length >= 30) return json({ ok: false, error: '안전을 위해 시간당 AI 생성은 30회로 제한됩니다. 잠시 후 다시 시도해 주세요.' }, 429);
     const request = await req.json();
     const mode = request.mode;
-    if (!['plan', 'prologue', 'episode'].includes(mode)) return json({ ok: false, error: '올바르지 않은 생성 요청입니다.' }, 400);
+    if (!['plan', 'prologue', 'episode', 'episode_part'].includes(mode)) return json({ ok: false, error: '올바르지 않은 생성 요청입니다.' }, 400);
     let result: unknown;
     if (mode === 'plan') {
       const text = await openAI(planPrompt(request.story || {}), 2400, planSchema);
       result = JSON.parse(stripMarkup(text));
     } else {
-      const prompt = episodePrompt(request.story || {}, mode, request.previous || '', request.plan, Number(request.episode || 0), Boolean(request.finish));
-      let text = stripMarkup(await openAI(prompt, mode === 'prologue' ? 5000 : 22000));
+      const isPart = mode === 'episode_part';
+      const part = Number(request.part || 1);
+            const prompt = episodePrompt(request.story || {}, isPart ? 'episode' : mode, request.previous || '', request.plan, Number(request.episode || 0), Boolean(request.finish)) + (isPart ? [
+        '',
+        `이번 출력은 한 화를 구성하는 ${part}번째 연속 장면입니다. 공백 제외 5,200~5,800자로 쓰세요. 앞 장면의 마지막 사건을 바로 이어받고, 제목·화수·설명은 쓰지 마세요.`,
+        request.finalPart ? '이번 장면은 전체 화의 끝이므로 완결된 문장으로 마치세요.' : '다음 장면이 자연스럽게 이어질 수 있는 행동이나 감정의 변화로 마치세요.',
+      ].join('\\n') : '');
+      let text = stripMarkup(await openAI(prompt, mode === 'prologue' ? 5000 : (isPart ? 8000 : 22000)));
       if (mode === 'episode' && withoutSpace(text) > 20050) {
         let count = 0, cut = 0;
         for (const char of text) { if (!/\s/.test(char)) count++; if (count > 20050) break; cut++; }
