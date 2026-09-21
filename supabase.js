@@ -13,12 +13,13 @@ const SUPABASE_URL='https://rrvntqfubjfbnkhujrxo.supabase.co';const SUPABASE_KEY
 })();
 /* The browser calls a Supabase Edge Function. OpenAI credentials remain server-only. */
 window.StoryAI={async generate(payload){await ensureStorySession();const {data,error}=await supabaseClient.functions.invoke('story-generate',{body:payload});if(error){let message='AI 서버 연결에 실패했습니다.';try{const detail=await error.context.json();message=detail?.error||message}catch{}throw new Error(message)}if(!data?.ok)throw new Error(data?.error||'AI 생성에 실패했습니다.');return data}};
-window.StoryAI.generateEpisode=async function(payload,onProgress){
+window.StoryAI.generateEpisode=async function(payload,onProgress,onPart){
   const count=text=>String(text||'').replace(/\s/g,'').length;
   const trim=text=>{let seen=0,limit=0;for(const char of text){if(!/\s/.test(char))seen++;if(seen>20050)break;limit++}const clipped=text.slice(0,limit).trim();for(let i=clipped.length-1;i>=0;i--){if(/[.!?]/.test(clipped[i])&&count(clipped.slice(0,i+1))>=20000)return clipped.slice(0,i+1).trim()}return clipped};
-  const parts=[];let context=payload.previous||'';
-  for(let part=1;part<=4;part++){onProgress?.(part,4);const response=await this.generate({...payload,mode:'episode_part',part,finalPart:part===4,previous:context});parts.push(response.result.text);context=`${payload.previous||''}\n\n${parts.join('\n\n')}`}
+  const parts=Array.isArray(payload.parts)?[...payload.parts]:[];let context=payload.previous||'';
+  if(parts.length)context=`${payload.previous||''}\n\n${parts.join('\n\n')}`;
+  for(let part=parts.length+1;part<=4;part++){onProgress?.(part,4);const response=await this.generate({...payload,mode:'episode_part',part,finalPart:part===4,previous:context});parts.push(response.result.text);onPart?.(parts);context=`${payload.previous||''}\n\n${parts.join('\n\n')}`}
   let text=parts.join('\n\n');
-  if(count(text)<20000){onProgress?.(5,5);const response=await this.generate({...payload,mode:'episode_part',part:5,finalPart:true,previous:context});text+='\n\n'+response.result.text}
-  text=trim(text);if(count(text)<20000||count(text)>20050)throw new Error('정확한 분량의 원고를 만들지 못했습니다. 다시 생성해 주세요.');return{text};
+  if(count(text)<20000){onProgress?.(5,5);const response=await this.generate({...payload,mode:'episode_part',part:5,finalPart:true,previous:context});parts.push(response.result.text);onPart?.(parts);text=parts.join('\n\n')}
+  text=trim(text);if(count(text)<20000||count(text)>20050)throw new Error('정확한 분량의 원고를 만들지 못했습니다. 다시 생성해 주세요.');return{text,parts};
 };

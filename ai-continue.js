@@ -12,7 +12,7 @@
     button.disabled=true;button.innerHTML='원고를 쓰는 중…';
     try{
       const response=await StoryAI.generateEpisode({story:current.data,plan:current.data.aiPlan||{},previous:input.value||base.contentText,episode:number,finish},(part,total)=>{button.textContent='AI가 원고를 쓰는 중… '+part+'/'+total});
-      const text=response.result.text, html=`<h2>${esc(current.data.title)}</h2><div class="meta">제 ${number}화 · 공백 제외 ${text.replace(/\s/g,'').length.toLocaleString()}자${finish?' · 완결':''}</div>${paragraphs(text)}`;
+      const text=response.text, html=`<h2>${esc(current.data.title)}</h2><div class="meta">제 ${number}화 · 공백 제외 ${text.replace(/\s/g,'').length.toLocaleString()}자${finish?' · 완결':''}</div>${paragraphs(text)}`;
       history.push({chapter:number,contentText:text,contentHtml:html});write({...current,chapter:number,contentText:text,contentHtml:html,history});
       try{await StoryStore.save({title:current.data.title,chapter:`EPISODE ${number}`,content:html})}catch{}
       location.reload();
